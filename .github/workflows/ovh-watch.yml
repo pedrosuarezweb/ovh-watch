@@ -1,0 +1,37 @@
+name: Vigilante stock OVH VPS-3 2027
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+    inputs:
+      modo:
+        description: "Opción: vacío (normal), --list o --test"
+        required: false
+        default: ""
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: state.json
+          key: ovh-state-${{ github.run_id }}
+          restore-keys: ovh-state-
+
+      - name: Comprobar stock
+        env:
+          STATE_FILE: state.json
+          OVH_PLAN_CODE: ${{ secrets.OVH_PLAN_CODE }}
+          WA_PHONE: ${{ secrets.WA_PHONE }}
+          WA_APIKEY: ${{ secrets.WA_APIKEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: python3 ovh_vps_watch.py ${{ github.event.inputs.modo }}
